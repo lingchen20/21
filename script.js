@@ -5013,9 +5013,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
-    // 离开聊天界面时停止 TTS，避免切到其他页面后继续朗读（进入语音/视频通话界面不停，否则接通没声）
+    // 离开聊天界面时停止聊天语音条TTS（通话TTS在独立播放器上，不受影响）
     if (currentActiveScreen && currentActiveScreen.id === 'chat-interface-screen' && screenId !== 'chat-interface-screen' && screenId !== 'voice-call-screen' && screenId !== 'video-call-screen') {
-      if (typeof stopAllTtsPlayback === 'function') stopAllTtsPlayback();
+      if (typeof stopChatMessageTtsOnly === 'function') stopChatMessageTtsOnly();
     }
 
     if (screenId === 'chat-list-screen') {
@@ -13389,13 +13389,10 @@ https://xx.com/4.jpg 疑惑`;
 
   async function openChat(chatId) {
     state.activeChatId = chatId;
-    // 打着电话切到别人聊天时只重置语音条 UI，不碰播放器/队列，通话继续有声音
-    if (voiceCallState.isActive || videoCallState.isActive) {
-      document.querySelectorAll('.voice-play-btn').forEach(btn => { btn.textContent = '▶'; });
-      document.querySelectorAll('.voice-message-body .loading-spinner').forEach(el => { el.style.display = 'none'; });
-      document.querySelectorAll('.voice-message-body .voice-play-btn').forEach(btn => { btn.style.display = 'flex'; });
-    } else if (typeof stopAllTtsPlayback === 'function') {
-      stopAllTtsPlayback();
+    // 播放器已隔离：聊天TTS用tts-audio-player，通话TTS用call-tts-audio-player
+    // 切聊天时只需停聊天语音条，通话TTS在独立播放器上不受影响
+    if (typeof stopChatMessageTtsOnly === 'function') {
+      stopChatMessageTtsOnly();
     }
     const chat = state.chats[chatId];
     if (!chat) return;
@@ -52769,12 +52766,12 @@ ${werewolfGameState.discussionLog.map(d => `${d.speaker}: ${d.content}`).join('\
   function stopTtsQueue() {
     ttsQueue.length = 0;
     isTtsPlaying = false;
-    const ttsPlayer = document.getElementById('tts-audio-player');
-    if (ttsPlayer) {
-      ttsPlayer.onended = null;
-      ttsPlayer.onerror = null;
-      ttsPlayer.pause();
-      ttsPlayer.src = '';
+    const callPlayer = document.getElementById('call-tts-audio-player');
+    if (callPlayer) {
+      callPlayer.onended = null;
+      callPlayer.onerror = null;
+      callPlayer.pause();
+      callPlayer.src = '';
     }
   }
 
@@ -52854,8 +52851,7 @@ ${werewolfGameState.discussionLog.map(d => `${d.speaker}: ${d.content}`).join('\
             format: "mp3",
             channel: 1
           }
-        }),
-        signal
+        })
       });
 
       if (!response.ok) throw new Error("API请求失败");
@@ -52873,21 +52869,21 @@ ${werewolfGameState.discussionLog.map(d => `${d.speaker}: ${d.content}`).join('\
       const audioBlob = new Blob([audioBytes], { type: 'audio/mpeg' });
       const audioUrl = URL.createObjectURL(audioBlob);
 
-      const ttsPlayer = document.getElementById('tts-audio-player');
-      ttsPlayer.src = audioUrl;
-      ttsPlayer.dataset.currentText = text;
+      const callPlayer = document.getElementById('call-tts-audio-player');
+      callPlayer.src = audioUrl;
+      callPlayer.dataset.currentText = text;
 
       // 播完这条再播下一条
-      ttsPlayer.onended = () => {
+      callPlayer.onended = () => {
         URL.revokeObjectURL(audioUrl);
         processNextTts();
       };
-      ttsPlayer.onerror = () => {
+      callPlayer.onerror = () => {
         URL.revokeObjectURL(audioUrl);
         processNextTts();
       };
 
-      await ttsPlayer.play();
+      await callPlayer.play();
 
     } catch (error) {
       console.error("TTS生成失败:", error);
