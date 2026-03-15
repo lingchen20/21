@@ -2948,7 +2948,10 @@ document.addEventListener('DOMContentLoaded', () => {
     // 第三页的APP
     'myphone': 'https://i.postimg.cc/MTC3Tkw8/IMG-6436.jpg',
     'draw-guess': 'https://i.postimg.cc/k5dG3B4p/draw-guess-icon.png',
-    'char-generator': 'https://i.postimg.cc/nzGYM8qb/character-gen.jpg'
+    'char-generator': 'https://i.postimg.cc/nzGYM8qb/character-gen.jpg',
+    'online-app': 'https://i.postimg.cc/MTC3Tkw8/IMG-6436.jpg',
+    'forum': 'https://i.postimg.cc/MTC3Tkw8/IMG-6436.jpg',
+    'new-world': 'https://i.postimg.cc/MTC3Tkw8/IMG-6436.jpg'
   };
 
 
@@ -28542,7 +28545,10 @@ ${worldBookContent}
       // 第三页的APP
       'myphone': 'Myphone',
       'draw-guess': '你画我猜',
-      'char-generator': '角色生成'
+      'char-generator': '角色生成',
+      'online-app': '联机',
+      'forum': '论坛',
+      'new-world': '新世界'
     };
 
 
